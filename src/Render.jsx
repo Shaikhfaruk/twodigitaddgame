@@ -1,5 +1,5 @@
-import React from "react";
 import { useGameLogic } from "./LogicFile";
+import "./App.css";
 
 const Render = () => {
   const {
@@ -12,65 +12,79 @@ const Render = () => {
     score,
     lives,
     gameOver,
-    time,
+    gameTime,
   } = useGameLogic();
+
+  const handleOptionClick = (option) => {
+    handleAnswer(option);
+  };
 
   const handleInputChange = (event) => {
     setUserAnswer(event.target.value);
   };
 
-  const renderOptions = () => {
-    return options.map((option, index) => (
-      <button key={index} onClick={() => handleAnswer(option)}>
-        {option}
-      </button>
-    ));
+  const handleFormSubmit = (event) => {
+    event.preventDefault();
+    handleAnswer(parseInt(userAnswer));
+    setUserAnswer("");
   };
 
-  const renderGameOverDialog = () => {
-    return (
-      <div className="game-over-dialog">
-        <h2>Game Over!</h2>
-        <p>Your score: {score}</p>
-        <p>Time taken: {time} seconds</p>
-        <button onClick={() => window.location.reload()}>Start New Game</button>
-      </div>
-    );
+  const handleNewGame = () => {
+    window.location.reload();
   };
 
   return (
-    <div className="game-container">
-      <h1>Addition Game</h1>
+    <div className="container">
+      <h1 className="title">Addition Game</h1>
       {!gameOver && (
-        <>
-          <div className="question">
-            <p>Question {num1 + num2}</p>
-            <p>
-              {num1} + {num2} =
-            </p>
-          </div>
-          <div className="options">{renderOptions()}</div>
-          <div className="scoreboard">
-            <p>Score: {score}</p>
-            <p>Lives: {lives}</p>
-            <p>Time: {time} seconds</p>
-          </div>
-          <div className="answer-input">
-            <label htmlFor="answer">Your Answer:</label>
+        <div>
+          <p className="question">
+            Question {num1} + {num2} = ?
+          </p>
+          {/* <form onSubmit={handleFormSubmit} className="form-group">
             <input
               type="number"
-              id="answer"
-              name="answer"
               value={userAnswer}
               onChange={handleInputChange}
+              className="answer-input"
+              min="10"
+              max="99"
+              required
             />
-            <button onClick={() => handleAnswer(parseInt(userAnswer))}>
+            <button type="submit" className="submit-btn">
               Submit
             </button>
+          </form> */}
+          <div className="game-stats">
+            <p className="score">Score: {score}</p>
+            <p className="lives">Lives: {lives}</p>
+            <p className="timer">Time: {gameTime}</p>
           </div>
-        </>
+          <ul className="options">
+            {options.map((option, index) => (
+              <li
+                key={index}
+                onClick={() => handleOptionClick(option)}
+                className={
+                  userAnswer === option ? "option selected" : "option-box"
+                }
+              >
+                {option}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
-      {gameOver && renderGameOverDialog()}
+      {gameOver && (
+        <div>
+          <p className="game-over-msg">Game Over!</p>
+          <p className="final-score">Score: {score}</p>
+          <p className="final-time">Time: {gameTime}</p>
+          <button className="new-game-btn" onClick={handleNewGame}>
+            Start New Game
+          </button>
+        </div>
+      )}
     </div>
   );
 };

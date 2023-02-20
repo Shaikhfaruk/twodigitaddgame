@@ -1,65 +1,76 @@
 import { useState, useEffect } from "react";
 
-const generateRandomNumbers = () => {
-  const num1 = Math.floor(Math.random() * 90 + 10);
-  const num2 = Math.floor(Math.random() * (100 - num1) + 10);
-  return [num1, num2];
-};
-
-const generateOptions = (correctAnswer) => {
-  const options = [];
-  while (options.length < 3) {
-    const option =
-      Math.floor(Math.random() * 90 + 10) + Math.floor(Math.random() * 90 + 10);
-    if (option !== correctAnswer && !options.includes(option) && option < 100) {
-      options.push(option);
-    }
-  }
-  options.push(correctAnswer);
-  return options.sort(() => Math.random() - 0.5);
-};
-
 export const useGameLogic = () => {
-  const [questionNumber, setQuestionNumber] = useState(0);
   const [num1, setNum1] = useState(0);
   const [num2, setNum2] = useState(0);
-  const [correctAnswer, setCorrectAnswer] = useState(0);
+  const [answer, setAnswer] = useState(0);
   const [options, setOptions] = useState([]);
   const [userAnswer, setUserAnswer] = useState("");
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(3);
   const [gameOver, setGameOver] = useState(false);
-  const [time, setTime] = useState(0);
+  const [gameTime, setGameTime] = useState(0);
 
-  useEffect(() => {
-    const [num1, num2] = generateRandomNumbers();
-    setNum1(num1);
-    setNum2(num2);
-    setCorrectAnswer(num1 + num2);
-    setOptions(generateOptions(num1 + num2));
-  }, [questionNumber]);
+  const generateQuestion = () => {
+    const newNum1 = Math.floor(Math.random() * 100);
+    const newNum2 = Math.floor(Math.random() * (100 - newNum1));
+    const newAnswer = newNum1 + newNum2;
 
-  useEffect(() => {
-    if (gameOver) return;
-    const timer = setInterval(() => {
-      setTime((prevTime) => prevTime + 1);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [gameOver]);
-
-  const handleAnswer = (option) => {
-    const newScore = option === correctAnswer ? score + 1 : score;
-    const newLives = option === correctAnswer ? lives : lives - 1;
-    const isGameOver = newLives === 0 || questionNumber === 9;
-    if (isGameOver) {
-      setGameOver(true);
+    if (newAnswer > 100) {
+      generateQuestion();
     } else {
-      setScore(newScore);
-      setLives(newLives);
-      setQuestionNumber(questionNumber + 1);
-      setUserAnswer("");
+      setNum1(newNum1);
+      setNum2(newNum2);
+      setAnswer(newAnswer);
+      generateOptions(newAnswer); // call generateOptions with the newAnswer
     }
   };
+
+  const shuffleArray = (arr) => {
+    return arr.sort(() => Math.random() - 0.5);
+  };
+
+  const generateOptions = (newAnswer) => {
+    // accept newAnswer as a parameter
+    let newOptions = [];
+    for (let i = 0; i < 4; i++) {
+      let newOption;
+      do {
+        newOption = Math.floor(Math.random() * 100);
+      } while (newOptions.includes(newOption) || newOption === newAnswer); // use newAnswer instead of answer
+
+      newOptions.push(newOption);
+    }
+
+    newOptions.push(newAnswer);
+    setOptions(shuffleArray(newOptions));
+  };
+
+  const handleAnswer = (option) => {
+    if (option === answer || option === userAnswer) {
+      setScore(score + 1);
+      generateQuestion();
+    } else {
+      setLives(lives - 1);
+      if (lives === 1) {
+        setGameOver(true);
+      }
+    }
+  };
+
+  useEffect(() => {
+    generateQuestion();
+  }, []);
+
+  useEffect(() => {
+    if (!gameOver) {
+      const timer = setTimeout(() => {
+        setGameTime(gameTime + 1);
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [gameTime, gameOver]);
 
   return {
     num1,
@@ -71,6 +82,6 @@ export const useGameLogic = () => {
     score,
     lives,
     gameOver,
-    time,
+    gameTime,
   };
 };
